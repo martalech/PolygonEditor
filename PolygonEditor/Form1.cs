@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace PolygonEditor
@@ -12,20 +13,18 @@ namespace PolygonEditor
 
     public partial class PolygonEditor : Form
     {
-        MenuOption menuOption;
-        Relation relation;
+        MenuOption menuOption = MenuOption.MoveComponent;
+        Relation relation = Relation.None;
 
-        List<Edge> edges = new List<Edge>();
-        List<Vertex> vertices = new List<Vertex>();
         List<Polygon> polygons = new List<Polygon>();
-        List<(Edge e1, Edge e2)> edgesInRelation = new List<(Edge, Edge)>();
+        List<(Edge edge1, Edge edge2)> edgesInRelation = new List<(Edge, Edge)>();
         List<Edge> clickedEdges = new List<Edge>();
-        HashSet<Edge> correctedEdges = new HashSet<Edge>();
 
         Vertex movingVertex = null;
         Edge movingEdge = null;
         Polygon movingPolygon = null;
         Vertex mouse = new Vertex();
+        ToolStripMenuItem lastMenu = null;
 
         bool mouseDown = false;
 
@@ -45,28 +44,31 @@ namespace PolygonEditor
             {
                 predefinedEdges.Add(new Edge(predefinedVertices[i], predefinedVertices[(i + 1) % 5]));
             }
-            edgesInRelation.Add((predefinedEdges[0], predefinedEdges[2]));
-            edgesInRelation.Add((predefinedEdges[3], predefinedEdges[4]));
             EqualEdges(predefinedEdges[0], predefinedEdges[2], predefinedEdges[0].From);
             PerpendiculateEdges(predefinedEdges[3], predefinedEdges[4], predefinedEdges[3].From);
             polygons.Add(new Polygon(predefinedVertices, predefinedEdges));
+            edgesInRelation.Add((predefinedEdges[0], predefinedEdges[2]));
+            edgesInRelation.Add((predefinedEdges[3], predefinedEdges[4]));
+            SetMenuItemColor(MoveComponentMenuItem);
             RepaintPolygon();
         }
 
         private void OnMoveComponentMenuItemClick(object sender, EventArgs e)
         {
-            IsLastPolygonCorrect();
-            vertices = new List<Vertex>();
-            edges = new List<Edge>();
-            polygons.Add(new Polygon(vertices, edges));
-            menuOption = MenuOption.AddVertex;
+            if (!IsLastPolygonCorrect())
+                return;
+            menuOption = MenuOption.MoveComponent;
+            SetMenuItemColor(MoveComponentMenuItem);
         }
 
         private void OnAddVertexMenuItemClick(object sender, EventArgs e)
         {
-            if (!IsLastPolygonCorrect())
-                return;
-            menuOption = MenuOption.MoveComponent;
+            IsLastPolygonCorrect();
+            List<Vertex> vertices = new List<Vertex>();
+            List<Edge> edges = new List<Edge>();
+            polygons.Add(new Polygon(vertices, edges));
+            menuOption = MenuOption.AddVertex;
+            SetMenuItemColor(AddVertexMenuItem);
         }
 
         private void OnRemoveVertexMenuItemClick(object sender, EventArgs e)
@@ -74,6 +76,7 @@ namespace PolygonEditor
             if (!IsLastPolygonCorrect())
                 return;
             menuOption = MenuOption.DeleteVertex;
+            SetMenuItemColor(RemoveVertexMenuItem);
         }
 
         private void OnMovePolygonMenuItemClick(object sender, EventArgs e)
@@ -81,6 +84,7 @@ namespace PolygonEditor
             if (!IsLastPolygonCorrect())
                 return;
             menuOption = MenuOption.MovePolygon;
+            SetMenuItemColor(MovePolygonMenuItem);
         }
 
         private void OnRemovePolygonMenuItemClick(object sender, EventArgs e)
@@ -88,6 +92,7 @@ namespace PolygonEditor
             if (!IsLastPolygonCorrect())
                 return;
             menuOption = MenuOption.RemovePolygon;
+            SetMenuItemColor(RemovePolygonMenuItem);
         }
 
         private void OnHalveEdgeMenuItemClick(object sender, EventArgs e)
@@ -95,6 +100,7 @@ namespace PolygonEditor
             if (!IsLastPolygonCorrect())
                 return;
             menuOption = MenuOption.HalveEdge;
+            SetMenuItemColor(HalveEdgeMenuItem);
         }
 
         private void OnEqualEdgesMenuItemClick(object sender, EventArgs e)
@@ -104,6 +110,7 @@ namespace PolygonEditor
             clickedEdges = new List<Edge>();
             menuOption = MenuOption.AddRelation;
             relation = Relation.Equality;
+            SetMenuItemColor(EqualEdgesMenuItem);
         }
 
         private void OnPerpendiculateEdgesMenuItemClick(object sender, EventArgs e)
@@ -113,6 +120,7 @@ namespace PolygonEditor
             clickedEdges = new List<Edge>();
             menuOption = MenuOption.AddRelation;
             relation = Relation.Perpendicular;
+            SetMenuItemColor(PerpendiculateEdgesMenuItem);
         }
 
         private void OnRemoveRelationMenuItemClick(object sender, EventArgs e)
@@ -120,10 +128,13 @@ namespace PolygonEditor
             if (!IsLastPolygonCorrect())
                 return;
             menuOption = MenuOption.RemoveRelation;
+            SetMenuItemColor(RemoveRelationMenuItem);
         }
 
         private void AddVertex(Vertex e)
         {
+            List<Vertex> vertices = polygons[polygons.Count - 1].Vertices;
+            List<Edge> edges = polygons[polygons.Count - 1].Edges;
             if (FindVertex(e).vertex != null)
             {
                 MessageBox.Show("Cannot place vertex on another vertex!");
@@ -188,7 +199,7 @@ namespace PolygonEditor
             {
                 removeFrom.Remove(toRemove);
             }
-            edges.Add(new Edge(from, to));
+            polygon.Edges.Add(new Edge(from, to));
             polygon.Vertices.Remove(vertexToRemove);
             RepaintPolygon();
         }
@@ -216,10 +227,13 @@ namespace PolygonEditor
 
         private void EqualEdges(Edge edge1, Edge edge2, Vertex staticPoint = null)
         {
-            if (AreEqual(edge1, edge2))
-                return;
             edge1.Relation = Relation.Equality;
             edge2.Relation = Relation.Equality;
+            if (AreEqual(edge1, edge2))
+            {
+                RepaintPolygon();
+                return;
+            }
             edge1.InRelation = edge2;
             edge2.InRelation = edge1;
             int e1Length = CalculateLength(edge1);
@@ -269,8 +283,13 @@ namespace PolygonEditor
 
         private void PerpendiculateEdges(Edge edge1, Edge edge2, Vertex staticPoint)
         {
+            edge1.Relation = Relation.Perpendicular;
+            edge2.Relation = Relation.Perpendicular;
             if (ArePerpendicular(edge1, edge2))
+            {
+                RepaintPolygon();
                 return;
+            }
             double x1 = edge2.From.X;
             double y1 = edge2.From.Y;
             double x2 = edge2.To.X;
@@ -278,10 +297,6 @@ namespace PolygonEditor
             Vertex movingPoint = edge1.From.Coord == staticPoint.Coord ? edge1.To : edge1.From;
             double a = (double)(y2 - y1) / (double)(x2 - x1);
             double b = y1 - a * x1;
-            //a = (-1) * (1 / a);
-            //b = staticPoint.Y - a * staticPoint.X;
-            edge1.Relation = Relation.Perpendicular;
-            edge2.Relation = Relation.Perpendicular;
             edge1.InRelation = edge2;
             edge2.InRelation = edge1;
             int e1Length = CalculateLength(edge1);
@@ -328,17 +343,10 @@ namespace PolygonEditor
             //{
             //    int elo = 4;
             //}
-            //Debug.WriteLine($"movpoint1({x1}, {y1})->({x0},{y0})");
-            //Debug.WriteLine($"movpoint1({x2}, {y2})->({x0},{y0})");
             int length1 = CalculateLength(new Edge(new Vertex((int)x1, (int)y1),
             new Vertex(movingPoint.X, movingPoint.Y)));
             int length2 = CalculateLength(new Edge(new Vertex((int)x2, (int)y2),
                 new Vertex(movingPoint.X, movingPoint.Y)));
-            //if (x1 < 0 || y1 < 0)
-            //    movingPoint.Coord = new Point((int)x2, (int)y2);
-            //else if (x2 < 0 || y2 < 0)
-            //    movingPoint.Coord = new Point((int)x1, (int)y1);
-            //else
                 movingPoint.Coord = length1 < length2 ? new Point((int)x1, (int)y1) :
                     new Point((int)x2, (int)y2);
             RepaintPolygon();
@@ -370,62 +378,6 @@ namespace PolygonEditor
                 }
             RepaintPolygon();
         }
-
-        //private void CorrectRight(Edge e)
-        //{
-        //    var iter = e;
-        //    while(iter.Relation != Relation.None && iter.To != e.From)
-        //    {
-        //        if (correctedEdges.Add(iter))
-        //        {
-        //            Debug.WriteLine($"CR: ({e.From.X},{e.From.Y})->({e.To.X},{e.To.Y})");
-        //            Debug.WriteLine($"MR: ({iter.InRelation.From.X},{iter.InRelation.From.Y})");
-        //            if (iter.InRelation.To != e.From && iter.InRelation.To != e.To)
-        //            {
-        //                if (iter.Relation == Relation.Equality)
-        //                    EqualEdges(iter.InRelation, iter, iter.InRelation.To);
-        //                else
-        //                    PerpendiculateEdges(iter.InRelation, iter, iter.InRelation.To);
-        //            }
-        //            else
-        //            {
-        //                if (iter.Relation == Relation.Equality)
-        //                    EqualEdges(iter.InRelation, iter, iter.InRelation.From);
-        //                else
-        //                    PerpendiculateEdges(iter.InRelation, iter, iter.InRelation.From);
-        //            }
-        //        }
-        //        iter = iter.To.Edges[0] == iter ? iter.To.Edges[1] : iter.To.Edges[0];
-        //    }
-        //}
-
-        //private void CorrectLeft(Edge e)
-        //{
-        //    var iter = e;
-        //    while (iter.Relation != Relation.None && iter.From != e.To)
-        //    {
-        //        if (correctedEdges.Add(iter))
-        //        {
-        //            Debug.WriteLine($"CL: ({e.From.X},{e.From.Y})->({e.To.X},{e.To.Y})");
-        //            Debug.WriteLine($"ML: ({iter.InRelation.To.X},{iter.InRelation.To.Y})");
-        //            if (iter.InRelation.To != e.From && iter.InRelation.To != e.To)
-        //            {
-        //                if (iter.Relation == Relation.Equality)
-        //                    EqualEdges(iter.InRelation, iter, iter.InRelation.From);
-        //                else
-        //                    PerpendiculateEdges(iter.InRelation, iter, iter.InRelation.From);
-        //            }
-        //            else
-        //            {
-        //                if (iter.Relation == Relation.Equality)
-        //                    EqualEdges(iter.InRelation, iter, iter.InRelation.To);
-        //                else
-        //                    PerpendiculateEdges(iter.InRelation, iter, iter.InRelation.To);
-        //            }
-        //        }
-        //        iter = iter.From.Edges[0] == iter ? iter.From.Edges[1] : iter.From.Edges[0];
-        //    }
-        //}
 
         private (Vertex vertex, Polygon polygon) FindVertex(Vertex soughtVertex)
         {
@@ -468,67 +420,52 @@ namespace PolygonEditor
             return (null, null, -1);
         }
 
-        private Point? GetCircleLineIntersect(int x0, int y0, int r, Edge line, Vertex staticPoint)
-        {
-            Vertex movingPoint = staticPoint.Coord == line.From.Coord ? line.To : line.From;
-            double a, b, delta;
-            double a1, b1, c1, x1, y1, x2, y2;
-            if (line.To.X != line.From.X)
-            {
-                a = (double)(staticPoint.Y - movingPoint.Y) / (double)(staticPoint.X - movingPoint.X);
-                b = movingPoint.Y - a * movingPoint.X;
-                a1 = a * a + 1;
-                b1 = 2 * (a * b - x0 - a * y0);
-                c1 = x0 * x0 + b * b - 2 * b * y0 - r * r + y0 * y0;
-                delta = b1 * b1 - 4 * a1 * c1;
-                if (delta < 0)
-                    return null;
-                x1 = ((-1) * b1 - Math.Sqrt(delta)) / (2 * a1);
-                x2 = ((-1) * b1 + Math.Sqrt(delta)) / (2 * a1);
-                y1 = a * x1 + b;
-                y2 = a * x2 + b;
-            }
-            else
-            {
-                int x = line.From.X;
-                a1 = 1;
-                b1 = (-2) * y0;
-                c1 = x * x - 2 * x * x0 + x0 * x0 + y0 * y0 - r * r;
-                delta = b1 * b1 - 4 * a1 * c1;
-                if (delta < 0)
-                    return null;
-                y1 = ((-1) * b1 - Math.Sqrt(delta)) / (2 * a1);
-                y2 = ((-1) * b1 + Math.Sqrt(delta)) / (2 * a1);
-                x1 = x2 = x;
-            }
-            int length1 = CalculateLength(new Edge(new Vertex((int)x1, (int)y1),
-            new Vertex(movingPoint.X, movingPoint.Y)));
-            int length2 = CalculateLength(new Edge(new Vertex((int)x2, (int)y2),
-                new Vertex(movingPoint.X, movingPoint.Y)));
-            return length1 < length2 ? new Point((int)x1, (int)y1) :
-                new Point((int)x2, (int)y2);
-        }
+        //private Point? GetCircleLineIntersect(int x0, int y0, int r, Edge line, Vertex staticPoint)
+        //{
+        //    Vertex movingPoint = staticPoint.Coord == line.From.Coord ? line.To : line.From;
+        //    double a, b, delta;
+        //    double a1, b1, c1, x1, y1, x2, y2;
+        //    if (line.To.X != line.From.X)
+        //    {
+        //        a = (double)(staticPoint.Y - movingPoint.Y) / (double)(staticPoint.X - movingPoint.X);
+        //        b = movingPoint.Y - a * movingPoint.X;
+        //        a1 = a * a + 1;
+        //        b1 = 2 * (a * b - x0 - a * y0);
+        //        c1 = x0 * x0 + b * b - 2 * b * y0 - r * r + y0 * y0;
+        //        delta = b1 * b1 - 4 * a1 * c1;
+        //        if (delta < 0)
+        //            return null;
+        //        x1 = ((-1) * b1 - Math.Sqrt(delta)) / (2 * a1);
+        //        x2 = ((-1) * b1 + Math.Sqrt(delta)) / (2 * a1);
+        //        y1 = a * x1 + b;
+        //        y2 = a * x2 + b;
+        //    }
+        //    else
+        //    {
+        //        int x = line.From.X;
+        //        a1 = 1;
+        //        b1 = (-2) * y0;
+        //        c1 = x * x - 2 * x * x0 + x0 * x0 + y0 * y0 - r * r;
+        //        delta = b1 * b1 - 4 * a1 * c1;
+        //        if (delta < 0)
+        //            return null;
+        //        y1 = ((-1) * b1 - Math.Sqrt(delta)) / (2 * a1);
+        //        y2 = ((-1) * b1 + Math.Sqrt(delta)) / (2 * a1);
+        //        x1 = x2 = x;
+        //    }
+        //    int length1 = CalculateLength(new Edge(new Vertex((int)x1, (int)y1),
+        //    new Vertex(movingPoint.X, movingPoint.Y)));
+        //    int length2 = CalculateLength(new Edge(new Vertex((int)x2, (int)y2),
+        //        new Vertex(movingPoint.X, movingPoint.Y)));
+        //    return length1 < length2 ? new Point((int)x1, (int)y1) :
+        //        new Point((int)x2, (int)y2);
+        //}
 
-        private (Point p1, Point p2)? GetCirclesIntersect(int x1, int y1, int r1, int x2, int y2, int r2)
-        {
-            int d = CalculateLength(new Edge(x1, y1, x2, y2));
-            if (r1 + r2 < d)
-                return null;
-            double a = (r1 * r1 - r2 * r2 + d * d) / (2 * d);
-            double h = Math.Sqrt(r1 * r1 - a * a);
-            Point p = new Point((int)(x1 + (a / d) * (x2 - x1)), (int)(y1 + (a / d) * (y2 - y1)));
-            Point inters1 = new Point((int)(p.X + (h / d) * (y2 - y1)), (int)(p.Y - (h / d) * (x2 - x1)));
-            Point inters2 = new Point((int)(p.X - (h / d) * (y2 - y1)), (int)(p.Y + (h / d) * (x2 - x1)));
-            if (inters1.X < 0 || inters2.X < 0 || inters2.Y < 0 || inters1.Y < 0)
-                return null;
-            return (inters1, inters2);
-        }
-
-        private void CorrectClockwise(Edge e)
+        private bool CorrectClockwise(Edge e)
         {
             var edge = e;
             int iter = 0;
-            while (edge.Relation != Relation.None && iter < edges.Count)
+            while (edge.Relation != Relation.None && iter <= movingPolygon.Edges.Count)
             {
                 if (edge.Relation == Relation.Equality && AreEqual(edge, edge.InRelation))
                     break;
@@ -545,57 +482,16 @@ namespace PolygonEditor
                     }
                     else if (edgein.Relation == Relation.None)
                     {
-                        //(Point p1, Point p2)? points;
-                        //points = GetCirclesIntersect(edge.To.X, edge.To.Y, old,
-                        //        edgein.From.X, edgein.From.Y, oldin);
-                        //old = CalculateLength(edgein);
-                        //oldin = CalculateLength(edgein.From.GetInEdge());
-                        //if (points == null)
-                        //{
-                            EqualEdges(edge, edge.InRelation, edge.To);
-                        //}
-                        //else
-                        //{
-                        //    var valuePoints = points.Value;
-                        //    if (CalculateLength(new Edge(valuePoints.p1.X, valuePoints.p1.Y, edge.From.X, edge.From.Y))
-                        //        < CalculateLength(new Edge(valuePoints.p2.X, valuePoints.p2.Y, edge.From.X, edge.From.Y)))
-                        //        edge.From.Coord = valuePoints.p1;
-                        //    else
-                        //        edge.From.Coord = valuePoints.p2;
-                        //    Debug.WriteLine($"p1 ({valuePoints.p1.X}, {valuePoints.p1.Y})");
-                        //    Debug.WriteLine($"p2 ({valuePoints.p2.X}, {valuePoints.p2.Y})");
-                        //    Debug.WriteLine($"obracanko punktem ({edge.From.X}, {edge.From.Y})");
-                        //}
+                        EqualEdges(edge, edge.InRelation, edge.To);
                     }
                     else if (edgein.Relation == Relation.Perpendicular)
                     {
-                        //Point? p = GetCircleLineIntersect(edge.To.X, edge.To.Y, CalculateLength(edge), edgein, edgein.From);
-                        //if (p.HasValue)
-                        //{
-                        //    edgein.To.X = p.Value.X;
-                        //    edgein.To.Y = p.Value.Y;
-                        //}
                         EqualEdges(edge, edge.InRelation, edge.To);
                         PerpendiculateEdges(edgein, edgein.InRelation, edgein.To);
                     }
                 }
                 else if (edge.Relation == Relation.Perpendicular)
                 {
-                    //if (edgein.Relation == Relation.None)
-                    //{
-                    //    old = CalculateLength(edgein);
-                    //    oldin = CalculateLength(edgein.From.GetInEdge());
-                    //    PerpendiculateEdges(edge, edge.InRelation, edge.To);
-                    //}
-                    //else if (edgein.Relation == Relation.Equality)
-                    //{
-                    //    Point? p = GetCircleLineIntersect(edgein.To.X, edgein.To.Y, CalculateLength(edge), edgein, edgein.From);
-                    //    if (p.HasValue)
-                    //    {
-                    //        edgein.To.X = p.Value.X;
-                    //        edgein.To.Y = p.Value.Y;
-                    //    }
-                    //}
                     if (edgein.Relation == Relation.None || edgein.Relation == Relation.Perpendicular)
                         PerpendiculateEdges(edge, edge.InRelation, edge.To);
                     else
@@ -607,13 +503,14 @@ namespace PolygonEditor
                 edge = edgein;
                 iter++;
             }
+            return iter == movingPolygon.Edges.Count + 1 ? false : true;
         }
 
-        private void CorrectCounterclockwise(Edge e)
+        private bool CorrectCounterclockwise(Edge e)
         {
             var edge = e;
             int iter = 0;
-            while (edge.Relation != Relation.None && iter < edges.Count)
+            while (edge.Relation != Relation.None && iter <= movingPolygon.Edges.Count)
             {
                 if (edge.Relation == Relation.Equality && AreEqual(edge, edge.InRelation))
                     break;
@@ -630,27 +527,7 @@ namespace PolygonEditor
                     }
                     else if (edgeout.Relation == Relation.Equality)
                     {
-                        //(Point p1, Point p2)? points;
-                        //points = GetCirclesIntersect(edge.From.X, edge.From.Y, old,
-                        //        edgeout.To.X, edgeout.To.Y, oldOut);
-                        //old = CalculateLength(edgeout);
-                        //oldOut = CalculateLength(edgeout.To.GetOutEdge());
-                        //if (points == null)
-                        //{
-                            EqualEdges(edge, edge.InRelation, edge.From);
-                        //}
-                        //else
-                        //{
-                        //    var valuePoints = points.Value;
-                        //    if (CalculateLength(new Edge(valuePoints.p1.X, valuePoints.p1.Y, edge.To.X, edge.To.Y))
-                        //        < CalculateLength(new Edge(valuePoints.p2.X, valuePoints.p2.Y, edge.To.X, edge.To.Y)))
-                        //        edge.To.Coord = valuePoints.p1;
-                        //    else
-                        //        edge.To.Coord = valuePoints.p2;
-                        //    Debug.WriteLine($"p1 ({valuePoints.p1.X}, {valuePoints.p1.Y})");
-                        //    Debug.WriteLine($"p2 ({valuePoints.p2.X}, {valuePoints.p2.Y})");
-                        //    Debug.WriteLine($"obracanko punktem ({edge.To.X}, {edge.To.Y})");
-                        //}
+                        EqualEdges(edge, edge.InRelation, edge.From);
                     }
                     else if (edgeout.Relation == Relation.Perpendicular)
                     {
@@ -673,11 +550,11 @@ namespace PolygonEditor
                 edge = edgeout;
                 iter++;
             }
+            return iter == movingPolygon.Edges.Count + 1 ? false : true;
         }
 
         private void MoveVertex(Vertex vertex, int x, int y)
         {
-            //Point newPoint = new Point(vertex.X, vertex.Y);
             var edge1 = vertex.GetInEdge();
             var edge2 = vertex.GetOutEdge();
             int oldLength1 = CalculateLength(edge1);
@@ -685,13 +562,19 @@ namespace PolygonEditor
             int oldLength2 = CalculateLength(edge2);
             int oldLength2Out = CalculateLength(edge2.To.GetOutEdge());
             vertex.Coord = new Point(x, y);
+            bool correctedClockwise = true, correctedCounterclockwise = true;
             if (edge1.Relation != Relation.None)
             {
-                CorrectClockwise(edge1);
+                correctedClockwise = CorrectClockwise(edge1);
             }
             if (edge2.Relation != Relation.None)
             {
-                CorrectCounterclockwise(edge2);
+                correctedCounterclockwise = CorrectCounterclockwise(edge2);
+            }
+            if ((edge1.Relation != Relation.None && !CorrectClockwise(edge1)) &&
+                (edge2.Relation != Relation.None && !CorrectCounterclockwise(edge2)))
+            {
+                InvalidPolygonError();
             }
             RepaintPolygon();
         }
@@ -700,35 +583,6 @@ namespace PolygonEditor
         {
             edge.From.Coord = new Point(edge.From.X+ x, edge.From.Y + y);
             edge.To.Coord = new Point(edge.To.X+ x, edge.To.Y + y);
-            //correctedEdges = new HashSet<Edge>();
-            //for (int i = 0; i < edge.From.Edges.Count; i++)
-            //{
-            //    var correctEdge = edge.From.Edges[i];
-            //    if (correctEdge.Relation != Relation.None)
-            //    {
-            //        if (correctEdge != edge)
-            //        {
-            //            if (correctEdge.To == edge.From)
-            //                CorrectClockwise(correctEdge);
-            //            else
-            //                CorrectCounterclockwise(correctEdge);
-            //        }
-            //    }
-            //}
-            //for (int i = 0; i < edge.To.Edges.Count; i++)
-            //{
-            //    var correctEdge = edge.To.Edges[i];
-            //    if (correctEdge.Relation != Relation.None)
-            //    {
-            //        if (correctEdge != edge)
-            //        {
-            //            if (correctEdge.From == edge.To)
-            //                CorrectCounterclockwise(correctEdge);
-            //            else
-            //                CorrectClockwise(correctEdge);
-            //        }
-            //    }
-            //}
             RepaintPolygon();
         }
 
@@ -754,30 +608,28 @@ namespace PolygonEditor
             }
             else if (menuOption == MenuOption.AddRelation)
             {
-                Edge edge = FindEdge(mouse).edge;
+                Edge edge;
+                (edge, movingPolygon) = FindEdge(mouse);
                 if (edge != null)
                 {
-                    if (clickedEdges.IndexOf(edge) == -1 && edge.Relation == Relation.None)
+                    if (clickedEdges.IndexOf(edge) == -1 && edge.Relation == Relation.None) {
                         clickedEdges.Add(edge);
+                    }
                     if (clickedEdges.Count == 2)
                     {
                         Edge e1 = clickedEdges[0], e2 = clickedEdges[1];
                         Point old = new Point(e1.To.X, e1.To.Y);
                         edgesInRelation.Add((e1, e2));
-                        int olde1 = CalculateLength(e1);
-                        int olde1Out = CalculateLength(e1.To.GetOutEdge());
-                        int olde1In = CalculateLength(e1.From.GetInEdge());
-                        int olde2 = CalculateLength(e2);
-                        int olde2Out = CalculateLength(e2.To.GetOutEdge());
-                        int olde2In = CalculateLength(e2.From.GetInEdge());
                         if (relation == Relation.Equality)
                             EqualEdges(e1, e2, e1.From);
                         else if (relation == Relation.Perpendicular)
                             PerpendiculateEdges(e1, e2, e1.From);
-                        CorrectClockwise(e1);
-                        CorrectCounterclockwise(e1.To.GetOutEdge());
-                        CorrectClockwise(e2);
-                        CorrectCounterclockwise(e2.To.GetOutEdge());
+                        if (!CorrectClockwise(e1) && CorrectCounterclockwise(e1.To.GetOutEdge()) &&
+                            !CorrectClockwise(e2) && CorrectCounterclockwise(e2.To.GetOutEdge()))
+                        {
+                            InvalidPolygonError();
+                            RepaintPolygon();
+                        }
                         clickedEdges = new List<Edge>();
                     }
                     return;
@@ -806,22 +658,9 @@ namespace PolygonEditor
             mouseDown = true;
             if (menuOption == MenuOption.MoveComponent)
             {
-                Polygon pl;
-                (movingVertex, pl) = FindVertex(mouse);
-                if (movingVertex != null && pl != null)
-                {
-                    edges = pl.Edges;
-                    vertices = pl.Vertices;
-                }
+                (movingVertex, movingPolygon) = FindVertex(mouse);
                 if (movingVertex == null)
-                {
-                    (movingEdge, pl) = FindEdge(mouse);
-                    if (movingEdge != null && pl != null)
-                    {
-                        edges = pl.Edges;
-                        vertices = pl.Vertices;
-                    }
-                }
+                    (movingEdge, movingPolygon) = FindEdge(mouse);
             }
             else if (menuOption == MenuOption.MovePolygon)
             {
@@ -849,8 +688,12 @@ namespace PolygonEditor
                 {
                     Point old = new Point(e.X, e.Y);
                     MoveEdge(movingEdge, e.X - mouse.Coord.X, e.Y - mouse.Y);
-                    CorrectCounterclockwise(movingEdge.To.GetOutEdge());
-                    CorrectClockwise(movingEdge.From.GetInEdge());
+                    if (!CorrectCounterclockwise(movingEdge.To.GetOutEdge()) &&
+                        !CorrectClockwise(movingEdge.From.GetInEdge()))
+                    {
+                        InvalidPolygonError();
+                        RepaintPolygon();
+                    }
                 }
             }
             else if (menuOption == MenuOption.MovePolygon && mouseDown)
@@ -885,7 +728,7 @@ namespace PolygonEditor
                 foreach (var vertex in polygon.Vertices)
                 {
                     g.FillEllipse(Brushes.Red, vertex.X - 3, vertex.Y - 3, 6, 6);
-                    g.DrawString($"({vertex.X}, {vertex.Y})", new Font("Arial", 10), Brushes.Black, vertex.X- 3, vertex.Y + 15);
+                    g.DrawString($"({vertex.X}, {vertex.Y})", new Font("Arial", 10), Brushes.Black, vertex.X - 3, vertex.Y - 20);
                 }
                 if (polygon.Edges.Count == 0)
                     continue;
@@ -897,22 +740,31 @@ namespace PolygonEditor
                         g.DrawLine(new Pen(Brushes.Black, 1), from, to);
                 }
             }
+            int equal = 1, perpendicular = 1;
             foreach ((Edge e1, Edge e2) in edgesInRelation)
             {
-                int x = (Math.Max(e1.From.Coord.X, e1.To.Coord.X) + Math.Min(e1.From.Coord.X,
+                int x1 = (Math.Max(e1.From.Coord.X, e1.To.Coord.X) + Math.Min(e1.From.Coord.X,
                     e1.To.Coord.X)) / 2;
-                int y = (Math.Max(e1.From.Y, e1.To.Y) + Math.Min(e1.From.Y,
+                int y1 = (Math.Max(e1.From.Y, e1.To.Y) + Math.Min(e1.From.Y,
                     e1.To.Y)) / 2;
-                Bitmap bitmap;
-                if (e1.Relation == Relation.Equality)
-                    bitmap = new Bitmap(Properties.Resources.EqualSign);
-                else
-                    bitmap = new Bitmap(Properties.Resources.PerpendicularSign);
                 int x2 = (Math.Max(e2.From.Coord.X, e2.To.Coord.X) + Math.Min(e2.From.Coord.X,
-                    e2.To.Coord.X)) / 2;
+                     e2.To.Coord.X)) / 2;
                 int y2 = (Math.Max(e2.From.Y, e2.To.Y) + Math.Min(e2.From.Y,
                     e2.To.Y)) / 2;
-                g.DrawImage(bitmap, x, y - 10, 10, 10);
+                Bitmap bitmap;
+                if (e1.Relation == Relation.Equality) {
+                    bitmap = new Bitmap(Properties.Resources.EqualSign);
+                    g.DrawString($"({equal})", new Font("Arial", 8), Brushes.Black, x1 + 10, y1 - 8);
+                    g.DrawString($"({equal})", new Font("Arial", 8), Brushes.Black, x2 + 10, y2 - 8);
+                    equal++;
+                }
+                else { 
+                    bitmap = new Bitmap(Properties.Resources.PerpendicularSign);
+                    g.DrawString($"({perpendicular})", new Font("Arial", 8), Brushes.Black, x1 + 10, y1 - 8);
+                    g.DrawString($"({perpendicular})", new Font("Arial", 8), Brushes.Black, x2 + 10, y2 - 8);
+                    perpendicular++;
+                }
+                g.DrawImage(bitmap, x1, y1 - 10, 10, 10);
                 g.DrawImage(bitmap, x2, y2 - 10, 10, 10);
             }
         }
@@ -930,12 +782,29 @@ namespace PolygonEditor
                 MessageBox.Show("A figure has to have more than 2 vertices - deleting last polygon");
                 polygons.RemoveAt(polygons.Count - 1);
                 RepaintPolygon();
-                vertices = new List<Vertex>();
-                edges = new List<Edge>();
+                List<Vertex> vertices = new List<Vertex>();
+                List<Edge> edges = new List<Edge>();
                 polygons.Add(new Polygon(vertices, edges));
                 return false;
             }
             return true;
+        }
+
+        private void InvalidPolygonError()
+        {
+            MessageBox.Show("Couldn't preserve relations while moving polygon - " +
+                "removing incorrect polygon");
+            mouseDown = false;
+            movingVertex = null;
+            movingEdge = null;
+            foreach (var edge in movingPolygon.Edges)
+            {
+                if (edge.Relation != Relation.None)
+                    RemoveRelation(edge);
+            }
+            polygons.Remove(movingPolygon);
+            movingPolygon = null;
+            mouse = new Vertex();
         }
 
         private bool BelongsToCircle(Vertex vertex, Vertex circle)
@@ -971,8 +840,8 @@ namespace PolygonEditor
                 (double)((bx - ax) * (bx - ax) + (by - ay) * (by - ay));
             int x3 = (int)(ax + u * (bx - ax));
             int y3 = (int)(ay + u * (by - ay));
-            if (CalculateLength(new Edge(new Vertex(x3, y3), new Vertex(x,y))) < 3 && x >= Math.Min(ax, bx) - 1 && x <= Math.Max(ax, bx) + 1 &&
-                y >= Math.Min(ay, by) - 1 && y <= Math.Max(ay, by) + 1)
+            if (CalculateLength(new Edge(new Vertex(x3, y3), new Vertex(x,y))) < 3 && x >= Math.Min(ax, bx) - 1
+                && x <= Math.Max(ax, bx) + 1 && y >= Math.Min(ay, by) - 1 && y <= Math.Max(ay, by) + 1)
             {
                 Debug.WriteLine($"({ax}, {ay}) -> ({bx}, {by})");
                 return true;
@@ -1024,6 +893,14 @@ namespace PolygonEditor
                 + (Math.Abs(e.To.X- e.From.Coord.X) * Math.Abs(e.To.Coord.X
                 - e.From.Coord.X));
             return (int)Math.Sqrt(wynik);
+        }
+
+        private void SetMenuItemColor(ToolStripMenuItem menuItem)
+        {
+            if (lastMenu != null)
+                lastMenu.BackColor = Color.Transparent;
+            lastMenu = menuItem;
+            lastMenu.BackColor = Color.MediumBlue;
         }
     }
 }

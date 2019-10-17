@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PolygonEditor));
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.MenuStrip = new System.Windows.Forms.MenuStrip();
             this.MoveComponentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.AddVertexMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.RemoveVertexMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -38,16 +38,16 @@
             this.HalveEdgeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.EqualEdgesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.PerpendiculateEdgesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.Board = new System.Windows.Forms.PictureBox();
             this.RemoveRelationMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuStrip1.SuspendLayout();
+            this.Board = new System.Windows.Forms.PictureBox();
+            this.MenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.Board)).BeginInit();
             this.SuspendLayout();
             // 
-            // menuStrip1
+            // MenuStrip
             // 
-            this.menuStrip1.ImageScalingSize = new System.Drawing.Size(25, 25);
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.MenuStrip.ImageScalingSize = new System.Drawing.Size(25, 25);
+            this.MenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.MoveComponentMenuItem,
             this.AddVertexMenuItem,
             this.RemoveVertexMenuItem,
@@ -57,11 +57,11 @@
             this.EqualEdgesMenuItem,
             this.PerpendiculateEdgesMenuItem,
             this.RemoveRelationMenuItem});
-            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1182, 33);
-            this.menuStrip1.TabIndex = 0;
-            this.menuStrip1.Text = "menuStrip1";
+            this.MenuStrip.Location = new System.Drawing.Point(0, 0);
+            this.MenuStrip.Name = "MenuStrip";
+            this.MenuStrip.Size = new System.Drawing.Size(1182, 33);
+            this.MenuStrip.TabIndex = 0;
+            this.MenuStrip.Text = "menuStrip1";
             // 
             // MoveComponentMenuItem
             // 
@@ -72,7 +72,7 @@
             this.MoveComponentMenuItem.Name = "MoveComponentMenuItem";
             this.MoveComponentMenuItem.Size = new System.Drawing.Size(37, 29);
             this.MoveComponentMenuItem.Text = "toolStripMenuItem2";
-            this.MoveComponentMenuItem.Click += new System.EventHandler(this.OnAddVertexMenuItemClick);
+            this.MoveComponentMenuItem.Click += new System.EventHandler(this.OnMoveComponentMenuItemClick);
             // 
             // AddVertexMenuItem
             // 
@@ -82,7 +82,7 @@
             this.AddVertexMenuItem.Name = "AddVertexMenuItem";
             this.AddVertexMenuItem.Size = new System.Drawing.Size(37, 29);
             this.AddVertexMenuItem.Tag = "";
-            this.AddVertexMenuItem.Click += new System.EventHandler(this.OnMoveComponentMenuItemClick);
+            this.AddVertexMenuItem.Click += new System.EventHandler(this.OnAddVertexMenuItemClick);
             // 
             // RemoveVertexMenuItem
             // 
@@ -139,9 +139,19 @@
             this.PerpendiculateEdgesMenuItem.Text = "toolStripMenuItem7";
             this.PerpendiculateEdgesMenuItem.Click += new System.EventHandler(this.OnPerpendiculateEdgesMenuItemClick);
             // 
+            // RemoveRelationMenuItem
+            // 
+            this.RemoveRelationMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.RemoveRelationMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("RemoveRelationMenuItem.Image")));
+            this.RemoveRelationMenuItem.Name = "RemoveRelationMenuItem";
+            this.RemoveRelationMenuItem.Size = new System.Drawing.Size(37, 29);
+            this.RemoveRelationMenuItem.Text = "toolStripMenuItem1";
+            this.RemoveRelationMenuItem.Click += new System.EventHandler(this.OnRemoveRelationMenuItemClick);
+            // 
             // Board
             // 
             this.Board.BackColor = System.Drawing.Color.White;
+            this.Board.Cursor = System.Windows.Forms.Cursors.Default;
             this.Board.Dock = System.Windows.Forms.DockStyle.Fill;
             this.Board.Location = new System.Drawing.Point(0, 33);
             this.Board.Name = "Board";
@@ -154,28 +164,19 @@
             this.Board.MouseMove += new System.Windows.Forms.MouseEventHandler(this.OnBoardMouseMove);
             this.Board.MouseUp += new System.Windows.Forms.MouseEventHandler(this.OnBoardMouseUp);
             // 
-            // RemoveRelationMenuItem
-            // 
-            this.RemoveRelationMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.RemoveRelationMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("RemoveRelationMenuItem.Image")));
-            this.RemoveRelationMenuItem.Name = "RemoveRelationMenuItem";
-            this.RemoveRelationMenuItem.Size = new System.Drawing.Size(37, 29);
-            this.RemoveRelationMenuItem.Text = "toolStripMenuItem1";
-            this.RemoveRelationMenuItem.Click += new System.EventHandler(this.OnRemoveRelationMenuItemClick);
-            // 
             // PolygonEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1182, 653);
             this.Controls.Add(this.Board);
-            this.Controls.Add(this.menuStrip1);
+            this.Controls.Add(this.MenuStrip);
             this.DoubleBuffered = true;
-            this.MainMenuStrip = this.menuStrip1;
+            this.MainMenuStrip = this.MenuStrip;
             this.Name = "PolygonEditor";
             this.Text = "Polygon Editor";
-            this.menuStrip1.ResumeLayout(false);
-            this.menuStrip1.PerformLayout();
+            this.MenuStrip.ResumeLayout(false);
+            this.MenuStrip.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.Board)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -184,7 +185,7 @@
 
         #endregion
 
-        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.MenuStrip MenuStrip;
         private System.Windows.Forms.ToolStripMenuItem AddVertexMenuItem;
         private System.Windows.Forms.ToolStripMenuItem MoveComponentMenuItem;
         private System.Windows.Forms.PictureBox Board;
