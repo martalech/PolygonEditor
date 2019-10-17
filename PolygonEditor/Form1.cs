@@ -474,31 +474,29 @@ namespace PolygonEditor
                 var edgein = edge.From.GetInEdge().To.GetInEdge();
                 if (edge.Relation == Relation.Equality)
                 {
-                    Debug.WriteLine($"edgeC{iter}: ({edge.From.X},{edge.From.Y})->({edge.To.X},{edge.To.Y})");
-                    Debug.WriteLine($"inC{iter}: ({edgein.From.X},{edgein.From.Y})->({edgein.To.X},{edgein.To.Y})");
-                    if (edgein.Relation == Relation.Equality)
-                    {
+                    //Debug.WriteLine($"edgeC{iter}: ({edge.From.X},{edge.From.Y})->({edge.To.X},{edge.To.Y})");
+                    //Debug.WriteLine($"inC{iter}: ({edgein.From.X},{edgein.From.Y})->({edgein.To.X},{edgein.To.Y})");
+                    //if (edgein.Relation == Relation.Equality || edgein.Relation == Relation.Perpendicular)
+                    //{
                         EqualEdges(edge, edge.InRelation, edge.To);
-                    }
-                    else if (edgein.Relation == Relation.None)
-                    {
-                        EqualEdges(edge, edge.InRelation, edge.To);
-                    }
-                    else if (edgein.Relation == Relation.Perpendicular)
-                    {
-                        EqualEdges(edge, edge.InRelation, edge.To);
-                        PerpendiculateEdges(edgein, edgein.InRelation, edgein.To);
-                    }
+                    //}
+                    //else if (edgein.Relation == Relation.Perpendicular)
+                    //{
+                    //    EqualEdges(edge, edge.InRelation, edge.To);
+                    //    PerpendiculateEdges(edgein, edgein.InRelation, edgein.To);
+                    //}
                 }
                 else if (edge.Relation == Relation.Perpendicular)
                 {
-                    if (edgein.Relation == Relation.None || edgein.Relation == Relation.Perpendicular)
+                    //if (edgein.Relation == Relation.None || edgein.Relation == Relation.Perpendicular)
+                    //{
                         PerpendiculateEdges(edge, edge.InRelation, edge.To);
-                    else
-                    {
-                        PerpendiculateEdges(edge, edge.InRelation, edge.To);
-                        EqualEdges(edgein, edgein.InRelation, edgein.To);
-                    }
+                    //}
+                    //else
+                    //{
+                    //    PerpendiculateEdges(edge, edge.InRelation, edge.To);
+                    //    EqualEdges(edgein, edgein.InRelation, edgein.To);
+                    //}
                 }
                 edge = edgein;
                 iter++;
@@ -519,33 +517,29 @@ namespace PolygonEditor
                 var edgeout = edge.From.GetOutEdge().To.GetOutEdge();
                 if (edge.Relation == Relation.Equality)
                 {
-                    Debug.WriteLine($"edgeCC{iter}: ({edge.From.X},{edge.From.Y})->({edge.To.X},{edge.To.Y})");
-                    Debug.WriteLine($"outCC{iter}: ({edgeout.From.X},{edgeout.From.Y})->({edgeout.To.X},{edgeout.To.Y})");
-                    if (edgeout.Relation == Relation.None)
-                    {
+                    //Debug.WriteLine($"edgeCC{iter}: ({edge.From.X},{edge.From.Y})->({edge.To.X},{edge.To.Y})");
+                    //Debug.WriteLine($"outCC{iter}: ({edgeout.From.X},{edgeout.From.Y})->({edgeout.To.X},{edgeout.To.Y})");
+                    //if (edgeout.Relation == Relation.None || edgeout.Relation == Relation.Equality)
+                    //{
                         EqualEdges(edge, edge.InRelation, edge.From);
-                    }
-                    else if (edgeout.Relation == Relation.Equality)
-                    {
-                        EqualEdges(edge, edge.InRelation, edge.From);
-                    }
-                    else if (edgeout.Relation == Relation.Perpendicular)
-                    {
-                        EqualEdges(edge, edge.InRelation, edge.From);
-                        PerpendiculateEdges(edgeout, edgeout.InRelation, edgeout.From);
-                    }
+                    //}
+                    //else if (edgeout.Relation == Relation.Perpendicular)
+                    //{
+                    //    EqualEdges(edge, edge.InRelation, edge.From);
+                    //    PerpendiculateEdges(edgeout, edgeout.InRelation, edgeout.From);
+                    //}
                 }
                 else if (edge.Relation == Relation.Perpendicular)
                 {
-                    if (edgeout.Relation == Relation.None || edgeout.Relation == Relation.Perpendicular)
-                    {
+                    //if (edgeout.Relation == Relation.None || edgeout.Relation == Relation.Perpendicular)
+                    //{
                         PerpendiculateEdges(edge, edge.InRelation, edge.From);
-                    }
-                    else
-                    {
-                        PerpendiculateEdges(edge, edge.InRelation, edge.From);
-                        EqualEdges(edgeout, edgeout.InRelation, edgeout.From);
-                    }
+                    //}
+                    //else
+                    //{
+                    //    PerpendiculateEdges(edge, edge.InRelation, edge.From);
+                    //    EqualEdges(edgeout, edgeout.InRelation, edgeout.From);
+                    //}
                 }
                 edge = edgeout;
                 iter++;
@@ -564,18 +558,11 @@ namespace PolygonEditor
             vertex.Coord = new Point(x, y);
             bool correctedClockwise = true, correctedCounterclockwise = true;
             if (edge1.Relation != Relation.None)
-            {
                 correctedClockwise = CorrectClockwise(edge1);
-            }
             if (edge2.Relation != Relation.None)
-            {
                 correctedCounterclockwise = CorrectCounterclockwise(edge2);
-            }
-            if ((edge1.Relation != Relation.None && !CorrectClockwise(edge1)) &&
-                (edge2.Relation != Relation.None && !CorrectCounterclockwise(edge2)))
-            {
+            if (!correctedClockwise && !correctedClockwise)
                 InvalidPolygonError();
-            }
             RepaintPolygon();
         }
 
@@ -619,13 +606,17 @@ namespace PolygonEditor
                     {
                         Edge e1 = clickedEdges[0], e2 = clickedEdges[1];
                         Point old = new Point(e1.To.X, e1.To.Y);
+                        bool[] corrected = new bool[4];
                         edgesInRelation.Add((e1, e2));
                         if (relation == Relation.Equality)
                             EqualEdges(e1, e2, e1.From);
                         else if (relation == Relation.Perpendicular)
                             PerpendiculateEdges(e1, e2, e1.From);
-                        if (!CorrectClockwise(e1) && CorrectCounterclockwise(e1.To.GetOutEdge()) &&
-                            !CorrectClockwise(e2) && CorrectCounterclockwise(e2.To.GetOutEdge()))
+                        corrected[0] = CorrectClockwise(e1);
+                        corrected[1] = CorrectClockwise(e2);
+                        corrected[2] = CorrectCounterclockwise(e1.To.GetOutEdge());
+                        corrected[3] = CorrectCounterclockwise(e2.To.GetOutEdge());
+                        if (!corrected[0] && !corrected[1] && !corrected[2] && !corrected[3])
                         {
                             InvalidPolygonError();
                             RepaintPolygon();
@@ -688,9 +679,11 @@ namespace PolygonEditor
                 {
                     Point old = new Point(e.X, e.Y);
                     MoveEdge(movingEdge, e.X - mouse.Coord.X, e.Y - mouse.Y);
-                    if (!CorrectCounterclockwise(movingEdge.To.GetOutEdge()) &&
-                        !CorrectClockwise(movingEdge.From.GetInEdge()))
-                    {
+                    bool correctedCounterclockwise = false, correctedClockwise = false;
+                    correctedCounterclockwise = CorrectCounterclockwise(movingEdge.To.GetOutEdge());
+                    correctedClockwise = CorrectClockwise(movingEdge.From.GetInEdge());
+                    if (!correctedClockwise && ! correctedCounterclockwise)
+                    { 
                         InvalidPolygonError();
                         RepaintPolygon();
                     }
@@ -852,7 +845,7 @@ namespace PolygonEditor
         private bool ArePerpendicular(Edge edge1, Edge edge2)
         {
             int a1, a2;
-            if (edge1.To.X - edge1.From.X == 0 && edge2.To.X - edge2.From.X == 0)
+            if (edge1.To.X - edge1.From.X == 0 && edge2.To.X - edge2.From.X == 0 )
                 return false;
             else if (edge1.To.X - edge1.From.X == 0)
             {
