@@ -229,13 +229,13 @@ namespace PolygonEditor
         {
             edge1.Relation = Relation.Equality;
             edge2.Relation = Relation.Equality;
+            edge1.InRelation = edge2;
+            edge2.InRelation = edge1;
             if (AreEqual(edge1, edge2))
             {
                 RepaintPolygon();
                 return;
             }
-            edge1.InRelation = edge2;
-            edge2.InRelation = edge1;
             int e1Length = CalculateLength(edge1);
             int e2Length = CalculateLength(edge2);
             int diff = Math.Abs(e1Length - e2Length);
@@ -271,12 +271,12 @@ namespace PolygonEditor
                     y2 = ((-1) * b1 + Math.Sqrt(delta)) / (2 * a1);
                     x1 = x2 = x;
                 }
-                int length1 = CalculateLength(new Edge(new Vertex((int)x1, (int)y1),
+                int length1 = CalculateLength(new Edge(new Vertex((int)Math.Round(x1), (int)Math.Round(y1)),
                     new Vertex(movingPoint.X, movingPoint.Y)));
-                int length2 = CalculateLength(new Edge(new Vertex((int)x2, (int)y2),
+                int length2 = CalculateLength(new Edge(new Vertex((int)Math.Round(x2), (int)Math.Round(y2)),
                     new Vertex(movingPoint.X, movingPoint.Y)));
-                    movingPoint.Coord = length1 < length2 ? new Point((int)x1, (int)y1) :
-                        new Point((int)x2, (int)y2);
+                movingPoint.Coord = length1 < length2 ? new Point((int)Math.Round(x1), (int)Math.Round(y1)) :
+                    new Point((int)Math.Round(x2), (int)Math.Round(y2));
             }
             RepaintPolygon();
         }
@@ -285,6 +285,8 @@ namespace PolygonEditor
         {
             edge1.Relation = Relation.Perpendicular;
             edge2.Relation = Relation.Perpendicular;
+            edge1.InRelation = edge2;
+            edge2.InRelation = edge1;
             if (ArePerpendicular(edge1, edge2))
             {
                 RepaintPolygon();
@@ -297,8 +299,6 @@ namespace PolygonEditor
             Vertex movingPoint = edge1.From.Coord == staticPoint.Coord ? edge1.To : edge1.From;
             double a = (double)(y2 - y1) / (double)(x2 - x1);
             double b = y1 - a * x1;
-            edge1.InRelation = edge2;
-            edge2.InRelation = edge1;
             int e1Length = CalculateLength(edge1);
             int e2Length = CalculateLength(edge2);
             int r = e1Length;
@@ -339,16 +339,32 @@ namespace PolygonEditor
                 y1 = a * x1 + b;
                 y2 = a * x2 + b;
             }
+            //double angle1, a1, a2;
+            //if (edge1.To.X == edge1.From.X)
+            //    a1 = ((double)(edge2.To.X - edge1.From.X) / (edge1.To.Y - edge1.From.Y));
+            //else
+            //    a1 = ((double)(edge1.To.Y - edge1.From.Y) / (edge1.To.X - edge1.From.X));
+            //if (edge2.To.X == edge2.From.X)
+            //    a2 = ((double)(edge1.To.X - edge2.From.X) / (edge2.To.Y - edge2.From.Y));
+            //else
+            //    a2 = ((double)(edge2.To.Y - edge2.From.Y) / (edge2.To.X - edge2.From.X));
+            //angle1 = Math.PI / 2 - Math.Atan(Math.Abs((a1 - a2) / (1 + a1 * a2)));
+            //Debug.WriteLine($"kat: {angle1 * 180 / Math.PI}");
+            //movingPoint.X -= staticPoint.X;
+            //movingPoint.Y -= staticPoint.Y;
+            //x1 = Math.Round(Math.Cos(angle1) * movingPoint.X - Math.Sin(angle1) * movingPoint.Y + staticPoint.X);
+            //y1 = Math.Round(Math.Sin(angle1) * movingPoint.X + Math.Cos(angle1) * movingPoint.Y + staticPoint.Y);
             //if (Double.IsNaN(x1) || Double.IsNaN(y1) || Double.IsNaN(x2) || Double.IsNaN(y2))
             //{
             //    int elo = 4;
             //}
-            int length1 = CalculateLength(new Edge(new Vertex((int)x1, (int)y1),
+            //movingPoint.Coord = new Point((int)Math.Round(x1), (int)Math.Round(y1));
+            int length1 = CalculateLength(new Edge(new Vertex((int)Math.Round(x1), (int)Math.Round(y1)),
             new Vertex(movingPoint.X, movingPoint.Y)));
-            int length2 = CalculateLength(new Edge(new Vertex((int)x2, (int)y2),
+            int length2 = CalculateLength(new Edge(new Vertex((int)Math.Round(x2), (int)Math.Round(y2)),
                 new Vertex(movingPoint.X, movingPoint.Y)));
-                movingPoint.Coord = length1 < length2 ? new Point((int)x1, (int)y1) :
-                    new Point((int)x2, (int)y2);
+            movingPoint.Coord = length1 < length2 ? new Point((int)Math.Round(x1), (int)Math.Round(y1)) :
+                new Point((int)Math.Round(x2), (int)Math.Round(y2));
             RepaintPolygon();
         }
 
@@ -476,27 +492,27 @@ namespace PolygonEditor
                 {
                     //Debug.WriteLine($"edgeC{iter}: ({edge.From.X},{edge.From.Y})->({edge.To.X},{edge.To.Y})");
                     //Debug.WriteLine($"inC{iter}: ({edgein.From.X},{edgein.From.Y})->({edgein.To.X},{edgein.To.Y})");
-                    //if (edgein.Relation == Relation.Equality || edgein.Relation == Relation.Perpendicular)
-                    //{
+                    if (edgein.Relation == Relation.Equality || edgein.Relation == Relation.Perpendicular)
+                    {
                         EqualEdges(edge, edge.InRelation, edge.To);
-                    //}
-                    //else if (edgein.Relation == Relation.Perpendicular)
-                    //{
-                    //    EqualEdges(edge, edge.InRelation, edge.To);
-                    //    PerpendiculateEdges(edgein, edgein.InRelation, edgein.To);
-                    //}
+                    }
+                    else if (edgein.Relation == Relation.Perpendicular)
+                    {
+                        EqualEdges(edge, edge.InRelation, edge.To);
+                        PerpendiculateEdges(edgein, edgein.InRelation, edgein.To);
+                    }
                 }
                 else if (edge.Relation == Relation.Perpendicular)
                 {
-                    //if (edgein.Relation == Relation.None || edgein.Relation == Relation.Perpendicular)
-                    //{
+                    if (edgein.Relation == Relation.None || edgein.Relation == Relation.Perpendicular)
+                    {
                         PerpendiculateEdges(edge, edge.InRelation, edge.To);
-                    //}
-                    //else
-                    //{
-                    //    PerpendiculateEdges(edge, edge.InRelation, edge.To);
-                    //    EqualEdges(edgein, edgein.InRelation, edgein.To);
-                    //}
+                    }
+                    else
+                    {
+                        PerpendiculateEdges(edge, edge.InRelation, edge.To);
+                        EqualEdges(edgein, edgein.InRelation, edgein.To);
+                    }
                 }
                 edge = edgein;
                 iter++;
@@ -519,27 +535,27 @@ namespace PolygonEditor
                 {
                     //Debug.WriteLine($"edgeCC{iter}: ({edge.From.X},{edge.From.Y})->({edge.To.X},{edge.To.Y})");
                     //Debug.WriteLine($"outCC{iter}: ({edgeout.From.X},{edgeout.From.Y})->({edgeout.To.X},{edgeout.To.Y})");
-                    //if (edgeout.Relation == Relation.None || edgeout.Relation == Relation.Equality)
-                    //{
+                    if (edgeout.Relation == Relation.None || edgeout.Relation == Relation.Equality)
+                    {
                         EqualEdges(edge, edge.InRelation, edge.From);
-                    //}
-                    //else if (edgeout.Relation == Relation.Perpendicular)
-                    //{
-                    //    EqualEdges(edge, edge.InRelation, edge.From);
-                    //    PerpendiculateEdges(edgeout, edgeout.InRelation, edgeout.From);
-                    //}
+                    }
+                    else if (edgeout.Relation == Relation.Perpendicular)
+                    {
+                        EqualEdges(edge, edge.InRelation, edge.From);
+                        PerpendiculateEdges(edgeout, edgeout.InRelation, edgeout.From);
+                    }
                 }
                 else if (edge.Relation == Relation.Perpendicular)
                 {
-                    //if (edgeout.Relation == Relation.None || edgeout.Relation == Relation.Perpendicular)
-                    //{
+                    if (edgeout.Relation == Relation.None || edgeout.Relation == Relation.Perpendicular)
+                    {
                         PerpendiculateEdges(edge, edge.InRelation, edge.From);
-                    //}
-                    //else
-                    //{
-                    //    PerpendiculateEdges(edge, edge.InRelation, edge.From);
-                    //    EqualEdges(edgeout, edgeout.InRelation, edgeout.From);
-                    //}
+                    }
+                    else
+                    {
+                        PerpendiculateEdges(edge, edge.InRelation, edge.From);
+                        EqualEdges(edgeout, edgeout.InRelation, edgeout.From);
+                    }
                 }
                 edge = edgeout;
                 iter++;
@@ -845,11 +861,24 @@ namespace PolygonEditor
         private bool ArePerpendicular(Edge edge1, Edge edge2)
         {
             int a1, a2;
-            if (edge1.To.X - edge1.From.X == 0 && edge2.To.X - edge2.From.X == 0 )
-                return false;
-            else if (edge1.To.X - edge1.From.X == 0)
+            if (CalculateLength(edge1) == 0)
             {
-                a2 = (edge2.To.Y - edge2.From.Y) / (edge2.To.X - edge2.From.X);
+                edge1.From.X += 1;
+                edge1.To.Y += 1;
+            }
+            if (CalculateLength(edge2) == 0)
+            {
+                edge2.From.X += 1;
+                edge2.To.Y += 1;
+            }
+            if (edge1.To.X - edge1.From.X == 0 && edge2.To.X - edge2.From.X == 0)
+            { 
+                edge2.To.X += 1;
+                edge2.To.Y += 1;
+            }
+            if (edge1.To.X - edge1.From.X == 0)
+            {
+                a2 = edge2.To.Y - edge2.From.Y;
                 if (a2 == 0)
                     return true;
                 else
@@ -857,7 +886,7 @@ namespace PolygonEditor
             }
             else if (edge2.To.X - edge2.From.X == 0)
             {
-                a1 = (edge1.To.Y - edge1.From.Y) / (edge1.To.X - edge1.From.X);
+                a1 = edge1.To.Y - edge1.From.Y;
                 if (a1 == 0)
                     return true;
                 else
@@ -876,6 +905,16 @@ namespace PolygonEditor
 
         private bool AreEqual(Edge edge1, Edge edge2)
         {
+            if (CalculateLength(edge1) == 0)
+            {
+                edge1.From.X += 1;
+                edge1.To.Y += 1;
+            }
+            if (CalculateLength(edge2) == 0)
+            {
+                edge2.From.X += 1;
+                edge1.To.Y += 1;
+            }
             return CalculateLength(edge1) == CalculateLength(edge2);
         }
 
@@ -894,6 +933,72 @@ namespace PolygonEditor
                 lastMenu.BackColor = Color.Transparent;
             lastMenu = menuItem;
             lastMenu.BackColor = Color.MediumBlue;
+        }
+
+        private void Bresenham(Edge edge, Graphics graphics)
+        {
+            int x0 = edge.From.X, y0 = edge.From.Y, x1 = edge.To.X
+                , y1 = edge.To.Y;
+            int dx, dy;
+            int xyi = 1;
+            int D, xy, xy0, xy1, dxy0, dxy1;
+            if (Math.Abs(y1 - y0) < Math.Abs(x1 - x0))
+            {
+
+                if (edge.To.X > edge.From.X)
+                {
+                    x1 = edge.From.X;
+                    y1 = edge.From.Y;
+                    x0 = edge.To.X;
+                    y0 = edge.To.Y;
+                }
+                dx = edge.To.X - edge.From.X;
+                dy = edge.To.Y - edge.From.Y;
+                if (dy < 0)
+                {
+                    xyi = -1;
+                    dy = (-1) * dy;
+                }
+                D = 2 * dx - dy;
+                xy = edge.From.X;
+                xy0 = edge.From.X;
+                xy1 = edge.To.X;
+                dxy0 = dx;
+                dxy1 = dy;
+            }
+            else
+            {
+                if (edge.From.Y > edge.To.Y)
+                {
+                    x1 = edge.From.X;
+                    y1 = edge.From.Y;
+                    x0 = edge.To.X;
+                    y0 = edge.To.Y;
+                }
+                dx = edge.To.X - edge.From.X;
+                dy = edge.To.Y - edge.From.Y;
+                if (dx < 0)
+                {
+                    xyi = -1;
+                    dx = (-1) * dx;
+                }
+                D = 2 * dy - dx;
+                xy = edge.From.Y;
+                xy0 = edge.From.Y;
+                xy1 = edge.To.Y;
+                dxy0 = dy;
+                dxy1 = dx;
+            }
+            for (int i = xy; i < xy1; i++)
+            {
+                graphics.FillRectangle(Brushes.Black, xy, i, 1, 1);
+                if (D > 0)
+                {
+                    xy = xy + i * xyi;
+                    D = D - 2 * dxy0;
+                }
+                D = D + 2 * dxy1;
+            }
         }
     }
 }
