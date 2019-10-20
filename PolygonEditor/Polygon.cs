@@ -17,6 +17,14 @@ namespace PolygonEditor
             Edges = new List<Edge>();
         }
 
+        public bool HasEdge(Edge e)
+        {
+            foreach (var edge in Edges)
+                if (edge == e)
+                    return true;
+            return false;
+        }
+
         public Polygon(List<Vertex> vertices, List<Edge> edges)
         {
             Vertices = vertices;
