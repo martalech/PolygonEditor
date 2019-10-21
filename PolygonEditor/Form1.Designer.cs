@@ -59,6 +59,7 @@
             this.RemoveRelationMenuItem});
             this.MenuStrip.Location = new System.Drawing.Point(0, 0);
             this.MenuStrip.Name = "MenuStrip";
+            this.MenuStrip.ShowItemToolTips = true;
             this.MenuStrip.Size = new System.Drawing.Size(1182, 33);
             this.MenuStrip.TabIndex = 0;
             this.MenuStrip.Text = "menuStrip1";
@@ -71,7 +72,7 @@
             this.MoveComponentMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("MoveComponentMenuItem.Image")));
             this.MoveComponentMenuItem.Name = "MoveComponentMenuItem";
             this.MoveComponentMenuItem.Size = new System.Drawing.Size(37, 29);
-            this.MoveComponentMenuItem.Text = "Move vertex/edge";
+            this.MoveComponentMenuItem.ToolTipText = "Move vertex/edge";
             this.MoveComponentMenuItem.Click += new System.EventHandler(this.OnMoveComponentMenuItemClick);
             // 
             // AddVertexMenuItem
@@ -82,7 +83,7 @@
             this.AddVertexMenuItem.Name = "AddVertexMenuItem";
             this.AddVertexMenuItem.Size = new System.Drawing.Size(37, 29);
             this.AddVertexMenuItem.Tag = "";
-            this.AddVertexMenuItem.Text = "Start adding new polygon";
+            this.AddVertexMenuItem.ToolTipText = "Start adding new polygon";
             this.AddVertexMenuItem.Click += new System.EventHandler(this.OnAddVertexMenuItemClick);
             // 
             // RemoveVertexMenuItem
@@ -91,7 +92,7 @@
             this.RemoveVertexMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("RemoveVertexMenuItem.Image")));
             this.RemoveVertexMenuItem.Name = "RemoveVertexMenuItem";
             this.RemoveVertexMenuItem.Size = new System.Drawing.Size(37, 29);
-            this.RemoveVertexMenuItem.Text = "Remove vertex";
+            this.RemoveVertexMenuItem.ToolTipText = "Remove vertex";
             this.RemoveVertexMenuItem.Click += new System.EventHandler(this.OnRemoveVertexMenuItemClick);
             // 
             // MovePolygonMenuItem
@@ -100,7 +101,7 @@
             this.MovePolygonMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("MovePolygonMenuItem.Image")));
             this.MovePolygonMenuItem.Name = "MovePolygonMenuItem";
             this.MovePolygonMenuItem.Size = new System.Drawing.Size(37, 29);
-            this.MovePolygonMenuItem.Text = "Move polygon";
+            this.MovePolygonMenuItem.ToolTipText = "Move polygon";
             this.MovePolygonMenuItem.Click += new System.EventHandler(this.OnMovePolygonMenuItemClick);
             // 
             // RemovePolygonMenuItem
@@ -109,7 +110,7 @@
             this.RemovePolygonMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("RemovePolygonMenuItem.Image")));
             this.RemovePolygonMenuItem.Name = "RemovePolygonMenuItem";
             this.RemovePolygonMenuItem.Size = new System.Drawing.Size(37, 29);
-            this.RemovePolygonMenuItem.Text = "Remove polygon";
+            this.RemovePolygonMenuItem.ToolTipText = "Remove polygon";
             this.RemovePolygonMenuItem.Click += new System.EventHandler(this.OnRemovePolygonMenuItemClick);
             // 
             // HalveEdgeMenuItem
@@ -118,7 +119,7 @@
             this.HalveEdgeMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("HalveEdgeMenuItem.Image")));
             this.HalveEdgeMenuItem.Name = "HalveEdgeMenuItem";
             this.HalveEdgeMenuItem.Size = new System.Drawing.Size(37, 29);
-            this.HalveEdgeMenuItem.Text = "Halve edge";
+            this.HalveEdgeMenuItem.ToolTipText = "Halve edge";
             this.HalveEdgeMenuItem.Click += new System.EventHandler(this.OnHalveEdgeMenuItemClick);
             // 
             // EqualEdgesMenuItem
@@ -127,8 +128,8 @@
             this.EqualEdgesMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("EqualEdgesMenuItem.Image")));
             this.EqualEdgesMenuItem.Name = "EqualEdgesMenuItem";
             this.EqualEdgesMenuItem.Size = new System.Drawing.Size(37, 29);
-            this.EqualEdgesMenuItem.Text = "Make two edges equal";
             this.EqualEdgesMenuItem.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
+            this.EqualEdgesMenuItem.ToolTipText = "Make two edges equal";
             this.EqualEdgesMenuItem.Click += new System.EventHandler(this.OnEqualEdgesMenuItemClick);
             // 
             // PerpendiculateEdgesMenuItem
@@ -137,7 +138,7 @@
             this.PerpendiculateEdgesMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("PerpendiculateEdgesMenuItem.Image")));
             this.PerpendiculateEdgesMenuItem.Name = "PerpendiculateEdgesMenuItem";
             this.PerpendiculateEdgesMenuItem.Size = new System.Drawing.Size(37, 29);
-            this.PerpendiculateEdgesMenuItem.Text = "Make two edges perpendicular";
+            this.PerpendiculateEdgesMenuItem.ToolTipText = "Make two edges perpendicular";
             this.PerpendiculateEdgesMenuItem.Click += new System.EventHandler(this.OnPerpendiculateEdgesMenuItemClick);
             // 
             // RemoveRelationMenuItem
@@ -146,7 +147,7 @@
             this.RemoveRelationMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("RemoveRelationMenuItem.Image")));
             this.RemoveRelationMenuItem.Name = "RemoveRelationMenuItem";
             this.RemoveRelationMenuItem.Size = new System.Drawing.Size(37, 29);
-            this.RemoveRelationMenuItem.Text = "Remove relation from edge";
+            this.RemoveRelationMenuItem.ToolTipText = "Remove relation from edge";
             this.RemoveRelationMenuItem.Click += new System.EventHandler(this.OnRemoveRelationMenuItemClick);
             // 
             // Board
