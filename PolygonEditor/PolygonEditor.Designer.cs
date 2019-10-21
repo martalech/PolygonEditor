@@ -30,6 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PolygonEditor));
             this.MenuStrip = new System.Windows.Forms.MenuStrip();
+            this.Board = new System.Windows.Forms.PictureBox();
             this.MoveComponentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.AddVertexMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.RemoveVertexMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -39,7 +40,6 @@
             this.EqualEdgesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.PerpendiculateEdgesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.RemoveRelationMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.Board = new System.Windows.Forms.PictureBox();
             this.MenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.Board)).BeginInit();
             this.SuspendLayout();
@@ -63,6 +63,22 @@
             this.MenuStrip.Size = new System.Drawing.Size(1182, 33);
             this.MenuStrip.TabIndex = 0;
             this.MenuStrip.Text = "menuStrip1";
+            // 
+            // Board
+            // 
+            this.Board.BackColor = System.Drawing.Color.White;
+            this.Board.Cursor = System.Windows.Forms.Cursors.Default;
+            this.Board.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.Board.Location = new System.Drawing.Point(0, 33);
+            this.Board.Name = "Board";
+            this.Board.Size = new System.Drawing.Size(1182, 620);
+            this.Board.TabIndex = 1;
+            this.Board.TabStop = false;
+            this.Board.Paint += new System.Windows.Forms.PaintEventHandler(this.OnBoardPaint);
+            this.Board.MouseClick += new System.Windows.Forms.MouseEventHandler(this.OnBoadMouseClick);
+            this.Board.MouseDown += new System.Windows.Forms.MouseEventHandler(this.OnBoadMouseDown);
+            this.Board.MouseMove += new System.Windows.Forms.MouseEventHandler(this.OnBoardMouseMove);
+            this.Board.MouseUp += new System.Windows.Forms.MouseEventHandler(this.OnBoardMouseUp);
             // 
             // MoveComponentMenuItem
             // 
@@ -150,22 +166,6 @@
             this.RemoveRelationMenuItem.ToolTipText = "Remove relation from edge";
             this.RemoveRelationMenuItem.Click += new System.EventHandler(this.OnRemoveRelationMenuItemClick);
             // 
-            // Board
-            // 
-            this.Board.BackColor = System.Drawing.Color.White;
-            this.Board.Cursor = System.Windows.Forms.Cursors.Default;
-            this.Board.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.Board.Location = new System.Drawing.Point(0, 33);
-            this.Board.Name = "Board";
-            this.Board.Size = new System.Drawing.Size(1182, 620);
-            this.Board.TabIndex = 1;
-            this.Board.TabStop = false;
-            this.Board.Paint += new System.Windows.Forms.PaintEventHandler(this.OnBoardPaint);
-            this.Board.MouseClick += new System.Windows.Forms.MouseEventHandler(this.OnBoadMouseClick);
-            this.Board.MouseDown += new System.Windows.Forms.MouseEventHandler(this.OnBoadMouseDown);
-            this.Board.MouseMove += new System.Windows.Forms.MouseEventHandler(this.OnBoardMouseMove);
-            this.Board.MouseUp += new System.Windows.Forms.MouseEventHandler(this.OnBoardMouseUp);
-            // 
             // PolygonEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -174,6 +174,7 @@
             this.Controls.Add(this.Board);
             this.Controls.Add(this.MenuStrip);
             this.DoubleBuffered = true;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.MenuStrip;
             this.Name = "PolygonEditor";
             this.Text = "Polygon Editor";

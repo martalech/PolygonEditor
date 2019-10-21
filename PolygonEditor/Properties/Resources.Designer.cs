@@ -79,5 +79,15 @@ namespace PolygonEditor.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        /// <summary>
+        ///   Wyszukuje zlokalizowany zasób typu System.Drawing.Icon podobny do zasobu (Ikona).
+        /// </summary>
+        internal static System.Drawing.Icon polygon_icon_28 {
+            get {
+                object obj = ResourceManager.GetObject("polygon_icon_28", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
     }
 }

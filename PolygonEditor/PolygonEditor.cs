@@ -556,9 +556,11 @@ namespace PolygonEditor
                 if (edge != null)
                 {
                     if (clickedEdges.IndexOf(edge) == -1 && edge.Relation == Relation.None)
-                    { 
+                    {
                         if (clickedEdges.Count == 0)
+                        {
                             clickedEdges.Add(edge);
+                        }
                         else
                         {
                             if (movingPolygon.HasEdge(clickedEdges[0]))
@@ -566,6 +568,7 @@ namespace PolygonEditor
                             else
                                 MessageBox.Show("Cannot add relation between edges from different polygons!");
                         }
+                        RepaintPolygon();
                     }
                     if (clickedEdges.Count == 2)
                     {
@@ -694,8 +697,13 @@ namespace PolygonEditor
                     Point from = edge.From.Coord;
                     Point to = edge.To.Coord;
                     if (!from.IsEmpty && !to.IsEmpty)
-                        Bresenham(edge, g);
-                        //g.DrawLine(new Pen(Brushes.Black, 1), from, to);
+                    {
+                        if(clickedEdges.IndexOf(edge) != -1)
+                            Bresenham(edge, g, Brushes.Aqua);
+                        else
+                            Bresenham(edge, g, Brushes.Black);
+                    }
+                    //g.DrawLine(new Pen(Brushes.Black, 1), from, to);
                 }
             }
             int equal = 1, perpendicular = 1;
@@ -877,7 +885,7 @@ namespace PolygonEditor
             lastMenu.BackColor = Color.MediumBlue;
         }
 
-        private void Bresenham(Edge edge, Graphics graphics)
+        private void Bresenham(Edge edge, Graphics graphics, Brush brush)
         {
             int x0 = edge.From.X;
             int y0 = edge.From.Y;
@@ -888,7 +896,7 @@ namespace PolygonEditor
             int err = (dx > dy ? dx : -dy) / 2, e2;
             for (;;)
             {
-                graphics.FillRectangle(Brushes.Black, x0, y0, 1, 1);
+                graphics.FillRectangle(brush, x0, y0, 1, 1);
                 if (x0 == x1 && y0 == y1) break;
                 e2 = err;
                 if (e2 > -dx) { err -= dy; x0 += sx; }
