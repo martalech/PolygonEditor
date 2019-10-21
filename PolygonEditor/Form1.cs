@@ -864,9 +864,9 @@ namespace PolygonEditor
 
         private int CalculateLength(Edge e)
         {
-            return (int)Math.Sqrt(Math.Abs(e.To.Y - e.From.Y) * Math.Abs(e.To.Y
+            return (int)Math.Sqrt((Math.Abs(e.To.Y - e.From.Y) * Math.Abs(e.To.Y
                 - e.From.Y)) + (Math.Abs(e.To.X - e.From.Coord.X) * Math.Abs(e.To.Coord.X
-                - e.From.Coord.X));
+                - e.From.Coord.X)));
         }
 
         private void SetMenuItemColor(ToolStripMenuItem menuItem)
