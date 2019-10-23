@@ -20,6 +20,9 @@ namespace PolygonEditor
         List<(Edge edge1, Edge edge2)> edgesInRelation = new List<(Edge, Edge)>();
         List<Edge> clickedEdges = new List<Edge>();
 
+        List<Vertex> vertexCopy = new List<Vertex>();
+        List<(Edge edge1, Edge edge2)> edgesRelationCopy = new List<(Edge edge1, Edge edge2)>();
+
         Vertex movingVertex = null;
         Edge movingEdge = null;
         Polygon movingPolygon = null;
@@ -434,7 +437,7 @@ namespace PolygonEditor
                 var edgein = edge.From.GetInEdge().To.GetInEdge();
                 if (edge.Relation == Relation.Equality)
                 {
-                    if (edgein.Relation == Relation.Equality || edgein.Relation == Relation.Perpendicular)
+                    if (edgein.Relation == Relation.Equality || edgein.Relation == Relation.None)
                     {
                         EqualEdges(edge, edge.InRelation, edge.To);
                     }
@@ -517,7 +520,7 @@ namespace PolygonEditor
                 correctedClockwise = CorrectClockwise(edge1);
             if (edge2.Relation != Relation.None)
                 correctedCounterclockwise = CorrectCounterclockwise(edge2);
-            if (!correctedClockwise && !correctedClockwise)
+            if (!correctedClockwise && !correctedCounterclockwise)
                 InvalidPolygonError();
             RepaintPolygon();
         }
@@ -553,20 +556,22 @@ namespace PolygonEditor
             {
                 Edge edge;
                 (edge, movingPolygon) = FindEdge(mouse);
+                if (movingPolygon != null)
+                    vertexCopy = movingPolygon.Vertices.Select(v =>
+                        new Vertex(v.X, v.Y)).ToList();
                 if (edge != null)
                 {
                     if (clickedEdges.IndexOf(edge) == -1 && edge.Relation == Relation.None)
                     {
                         if (clickedEdges.Count == 0)
-                        {
                             clickedEdges.Add(edge);
-                        }
                         else
                         {
                             if (movingPolygon.HasEdge(clickedEdges[0]))
                                 clickedEdges.Add(edge);
                             else
-                                MessageBox.Show("Cannot add relation between edges from different polygons!");
+                                MessageBox.Show("Cannot add relation between edges from" +
+                                    " different polygons!");
                         }
                         RepaintPolygon();
                     }
@@ -620,6 +625,9 @@ namespace PolygonEditor
                 (movingVertex, movingPolygon) = FindVertex(mouse);
                 if (movingVertex == null)
                     (movingEdge, movingPolygon) = FindEdge(mouse);
+                if (movingPolygon != null)
+                    vertexCopy = movingPolygon.Vertices.Select(v =>
+                        new Vertex(v.X, v.Y)).ToList();
             }
             else if (menuOption == MenuOption.MovePolygon)
             {
@@ -728,8 +736,10 @@ namespace PolygonEditor
                 else
                 {
                     bitmap = new Bitmap(Properties.Resources.PerpendicularSign);
-                    g.DrawString($"({perpendicular})", new Font("Arial", 8), Brushes.Black, x1 + 10, y1 - 8);
-                    g.DrawString($"({perpendicular})", new Font("Arial", 8), Brushes.Black, x2 + 10, y2 - 8);
+                    g.DrawString($"({perpendicular})", new Font("Arial", 8), Brushes.Black, x1 + 10,
+                        y1 - 8);
+                    g.DrawString($"({perpendicular})", new Font("Arial", 8), Brushes.Black, x2 + 10,
+                        y2 - 8);
                     perpendicular++;
                 }
                 g.DrawImage(bitmap, x1, y1 - 10, 10, 10);
@@ -761,16 +771,17 @@ namespace PolygonEditor
         private void InvalidPolygonError()
         {
             MessageBox.Show("Couldn't preserve relations while moving polygon - " +
-                "removing incorrect polygon");
+                "restoring last correct position");
             mouseDown = false;
             movingVertex = null;
             movingEdge = null;
-            foreach (var edge in movingPolygon.Edges)
+            int i = 0;
+            foreach(var vertex in movingPolygon.Vertices)
             {
-                if (edge.Relation != Relation.None)
-                    RemoveRelation(edge);
+                vertex.Coord = new Point(vertexCopy[i].X, vertexCopy[i].Y);
+                i++;
             }
-            polygons.Remove(movingPolygon);
+            vertexCopy = new List<Vertex>();
             movingPolygon = null;
             mouse = new Vertex();
         }
@@ -867,7 +878,7 @@ namespace PolygonEditor
                 edge2.From.X += 1;
                 edge1.To.Y += 1;
             }
-            return CalculateLength(edge1) == CalculateLength(edge2);
+            return Math.Abs(CalculateLength(edge1) - CalculateLength(edge2)) <= 1;
         }
 
         private int CalculateLength(Edge e)
@@ -891,17 +902,28 @@ namespace PolygonEditor
             int y0 = edge.From.Y;
             int x1 = edge.To.X;
             int y1 = edge.To.Y;
-            int dx = Math.Abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-            int dy = Math.Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-            int err = (dx > dy ? dx : -dy) / 2, e2;
-            for (;;)
+            int dx = Math.Abs(x1 - x0);
+            int dy = Math.Abs(y1 - y0);
+            int kx = x0 < x1 ? 1 : -1;
+            int ky = y0 < y1 ? 1 : -1;
+            int err = (dx > dy ? dx : (-1) * dy) / 2;
+            int e2;
+            while (x0 != x1 || y0 != y1)
             {
                 graphics.FillRectangle(brush, x0, y0, 1, 1);
-                if (x0 == x1 && y0 == y1) break;
                 e2 = err;
-                if (e2 > -dx) { err -= dy; x0 += sx; }
-                if (e2 < dy) { err += dx; y0 += sy; }
+                if (e2 + dx > 0)
+                {
+                    err -= dy;
+                    x0 += kx;
+                }
+                if (e2 - dy < 0)
+                {
+                    err += dx;
+                    y0 += ky;
+                }
             }
+            graphics.FillRectangle(brush, x0, y0, 1, 1);
         }
     }
 }

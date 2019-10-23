@@ -1,0 +1,38 @@
+-----Instrukcja obsługi-----
+
+1) Klawiszologia:
+
+Funkcje przycisków od lewej:
+1. Poruszanie wierzchołkiem lub krawędzią wielokąta
+2. Dodawanie wierzchołków nowego wielokąta (każdy wielokąt musi mieć co najmniej 3 wierzchołki, inaczej
+	program usunie wielokąt i poprosi o narysowanie nowego, nie można też stawiać jednego wierzchołka na drugim)
+3. Usuwanie wierzchołków wielokąta (można usunąć maksymalnie do trójkąta)
+4. Poruszanie całym wielokątem (poprzez poruszanie jego wierzchołkiem lub krawędzią)
+5. Usunięcie całego wielokąta (poprzez kliknięcie jego wierzchołka lub krawędzi)
+6. Przepołowienie krawędzi (wystarczy kliknąć w dowolnym miejscu na krawędzi, nie można przepoławiać krawędzi
+	o długości mniejszej niż 6 - wynika to z tego, że wierzchołki są kołami o promieniach 3)
+7. Dodanie relacji równości między krawędziami (wybrana krawędź podświetli się na kolor niebieski, można 
+	dodawać relację tylko między krawędziami z tego samego wielokąta)
+8. Dodanie relacji prostopadłości między krawędziami (wybrana krawędź podświetli się na kolor niebieski, można 
+	dodawać relację tylko między krawędziami z tego samego wielokąta)
+9. Usunięcie relacji z wierzchołka (usuwa także relację z wierzchołka z nim związanego)
+
+2) Implementacja algorytmów relacji:
+
+1. Równość
+	Funkcja równości przyjmuje 3 argumenty: krawędź, krawędź z nią związaną oraz tzw. punkt statyczny (krawędzi).
+	Wylicza nowe współrzędne punktu poruszanego z układu równań okręgu (o promieniu krawędzi związanej i środku
+	w punkcie statycznym) i prostej przechodzącej przez krawędź
+2. Prostopadłość
+	Funkcja równości przyjmuje 3 argumenty: krawędź, krawędź z nią związaną oraz tzw. punkt statyczny (krawędzi).
+	Wylicza nowe współrzędne punktu porszuanego z układu równań okręgu (o promieniu krawędzi i środku w punkcie
+	statycznym) i prostej prostopadłej do krawędzi związanej, przechodzącej przez punkt statyczny
+
+W obu przypadkach wyliczane są 2 punkty, z których wybierany jest ten o bliższej odległości od poprzednich
+współrzędnych punktu poruszanego.
+
+Algorytm poprawiania polega na przechodzeniu po wielokącie zgodnie z ruchem wskazówek zegara i przeciwnie, aż
+do momentu natrafienia na pustą krawędź lub natrafienia na krawędź z relacją, która spełnia swoją relację.
+Poprawiany jest zawsze punkt następny (w poprawianiu zgodnie z ruchem wskazówek - poprzedni) od punktu, który
+algorytm właśnie przetwarza.
+Jeśli algorytm przejdzie dwukrotnie po wielokącie, czyli nie można poprawić punktów algorytmem tak, aby zachować relacje, to program przywraca ostatnią poprawną wersję wielokąta.
