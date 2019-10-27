@@ -1111,7 +1111,8 @@ namespace PolygonEditor
             int err = (dx > dy ? dx : (-1) * dy) / 2;
             int e2;
             int xf = x0; int yf = y0;
-            int xb = x1; int yb = y1;            while (true)
+            int xb = x1; int yb = y1;
+            while (true)
             {
                 graphics.FillRectangle(brush, xf, yf, 1, 1);
                 graphics.FillRectangle(brush, xb, yb, 1, 1);
