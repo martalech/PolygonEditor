@@ -16,6 +16,7 @@ Funkcje przycisków od lewej:
 8. Dodanie relacji prostopadłości między krawędziami (wybrana krawędź podświetli się na kolor niebieski, można 
 	dodawać relację tylko między krawędziami z tego samego wielokąta)
 9. Usunięcie relacji z wierzchołka (usuwa także relację z wierzchołka z nim związanego)
+10. Dodane na lab - zmiana algorytmu rysowania - domyślnie Bresenham, z każdym kliknięciem inny algorytm
 
 2) Implementacja algorytmów relacji:
 

@@ -10,6 +10,7 @@ namespace PolygonEditor
     enum MenuOption { MoveComponent, AddVertex, DeleteVertex, MovePolygon, RemovePolygon, HalveEdge,
         AddRelation, RemoveRelation }
     enum Relation { None, Equality, Perpendicular }
+    enum Algorithm { Bresenham, Library, Antialiasing, BresenhamSymmetric }
 
     public partial class PolygonEditor : Form
     {
@@ -30,6 +31,7 @@ namespace PolygonEditor
         ToolStripMenuItem lastMenu = null;
 
         bool mouseDown = false;
+        int algorithmIndex = 0;
 
         public PolygonEditor()
         {
@@ -62,6 +64,8 @@ namespace PolygonEditor
                 return;
             menuOption = MenuOption.MoveComponent;
             SetMenuItemColor(MoveComponentMenuItem);
+            clickedEdges = new List<Edge>();
+            RepaintPolygon();
         }
 
         private void OnAddVertexMenuItemClick(object sender, EventArgs e)
@@ -72,6 +76,8 @@ namespace PolygonEditor
             polygons.Add(new Polygon(vertices, edges));
             menuOption = MenuOption.AddVertex;
             SetMenuItemColor(AddVertexMenuItem);
+            clickedEdges = new List<Edge>();
+            RepaintPolygon();
         }
 
         private void OnRemoveVertexMenuItemClick(object sender, EventArgs e)
@@ -80,6 +86,8 @@ namespace PolygonEditor
                 return;
             menuOption = MenuOption.DeleteVertex;
             SetMenuItemColor(RemoveVertexMenuItem);
+            clickedEdges = new List<Edge>();
+            RepaintPolygon();
         }
 
         private void OnMovePolygonMenuItemClick(object sender, EventArgs e)
@@ -88,6 +96,7 @@ namespace PolygonEditor
                 return;
             menuOption = MenuOption.MovePolygon;
             SetMenuItemColor(MovePolygonMenuItem);
+            clickedEdges = new List<Edge>();
         }
 
         private void OnRemovePolygonMenuItemClick(object sender, EventArgs e)
@@ -96,6 +105,8 @@ namespace PolygonEditor
                 return;
             menuOption = MenuOption.RemovePolygon;
             SetMenuItemColor(RemovePolygonMenuItem);
+            clickedEdges = new List<Edge>();
+            RepaintPolygon();
         }
 
         private void OnHalveEdgeMenuItemClick(object sender, EventArgs e)
@@ -104,6 +115,8 @@ namespace PolygonEditor
                 return;
             menuOption = MenuOption.HalveEdge;
             SetMenuItemColor(HalveEdgeMenuItem);
+            clickedEdges = new List<Edge>();
+            RepaintPolygon();
         }
 
         private void OnEqualEdgesMenuItemClick(object sender, EventArgs e)
@@ -114,6 +127,7 @@ namespace PolygonEditor
             menuOption = MenuOption.AddRelation;
             relation = Relation.Equality;
             SetMenuItemColor(EqualEdgesMenuItem);
+            RepaintPolygon();
         }
 
         private void OnPerpendiculateEdgesMenuItemClick(object sender, EventArgs e)
@@ -124,6 +138,7 @@ namespace PolygonEditor
             menuOption = MenuOption.AddRelation;
             relation = Relation.Perpendicular;
             SetMenuItemColor(PerpendiculateEdgesMenuItem);
+            RepaintPolygon();
         }
 
         private void OnRemoveRelationMenuItemClick(object sender, EventArgs e)
@@ -132,6 +147,8 @@ namespace PolygonEditor
                 return;
             menuOption = MenuOption.RemoveRelation;
             SetMenuItemColor(RemoveRelationMenuItem);
+            clickedEdges = new List<Edge>();
+            RepaintPolygon();
         }
 
         private void AddVertex(Vertex e)
@@ -706,12 +723,32 @@ namespace PolygonEditor
                     Point to = edge.To.Coord;
                     if (!from.IsEmpty && !to.IsEmpty)
                     {
-                        if(clickedEdges.IndexOf(edge) != -1)
-                            Bresenham(edge, g, Brushes.Aqua);
-                        else
-                            Bresenham(edge, g, Brushes.Black);
+                        Brush brush = clickedEdges.IndexOf(edge) != -1 ? Brushes.Aqua : Brushes.Black;
+                        switch (algorithmIndex)
+                        {
+                            case 0:
+                                Bresenham(edge, g, brush);
+                                break;
+                            case 1:
+                                g.DrawLine(new Pen(brush, 1), from, to);
+                                break;
+                            case 2:
+                                AntialiasingWU(edge, g, brush == Brushes.Black ? Color.Black : Color.Aqua);
+                                break;
+                            case 3:
+                                BresenhamSymmetric(edge, g, brush);
+                                break;
+                        }
+                        //if (clickedEdges.IndexOf(edge) != -1)
+                        //{
+                        //    Bresenham(edge, g, Brushes.Aqua);
+
+                        //}
+                        //else
+                        //{
+                        //    Bresenham(edge, g, Brushes.Black);
+                        //}
                     }
-                    //g.DrawLine(new Pen(Brushes.Black, 1), from, to);
                 }
             }
             int equal = 1, perpendicular = 1;
@@ -924,6 +961,176 @@ namespace PolygonEditor
                 }
             }
             graphics.FillRectangle(brush, x0, y0, 1, 1);
+        }
+
+        private void toolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            if (!IsLastPolygonCorrect())
+                return;
+            algorithmIndex = (algorithmIndex + 1) % 4;
+            switch (algorithmIndex)
+            {
+                case 0:
+                    MessageBox.Show("Drawing with Bresenham algorithm");
+                    break;
+                case 1:
+                    MessageBox.Show("Drawing with library algorithm");
+                    break;
+                case 2:
+                    MessageBox.Show("Drawing with antialiasing algorithm");
+                    break;
+                case 3:
+                    MessageBox.Show("Drawing with Symmetric Bresenham algorithm");
+                    break;
+            }
+            RepaintPolygon();
+        }
+
+        private int Ipart(double x)
+        {
+            return (int)x;
+        }
+
+        private int Round(double x)
+        {
+            return Ipart(x + 0.5);
+        }
+
+        public static double Frac(double x)
+        {
+            if (x < 0) return (1 - (x - Math.Floor(x)));
+            return (x - Math.Floor(x));
+        }
+
+        private double RFrac(double x)
+        {
+            return 1 - Frac(x);
+        }
+
+        public static void Swap(ref double a, ref double b)
+        {
+            double temp = a;
+            a = b;
+            b = temp;
+        }
+
+        private void Plot(Graphics g, double x, double y, double c, Color main)
+        {
+            int alpha = (int)(c * 255);
+            if (alpha > 255) alpha = 255;
+            if (alpha < 0) alpha = 0;
+            Color color = Color.FromArgb(alpha, main);
+            g.FillRectangle(new SolidBrush(color), (int)x, (int)y, 1, 1);
+        }
+
+        private void AntialiasingWU(Edge edge, Graphics graphics, Color color)
+        {
+            double x0 = edge.From.X;
+            double y0 = edge.From.Y;
+            double x1 = edge.To.X;
+            double y1 = edge.To.Y;
+            double dx = Math.Abs(x1 - x0);
+            double dy = Math.Abs(y1 - y0);
+            bool steep = dy > dx;
+            if (steep)
+            {
+                Swap(ref x0, ref y0);
+                Swap(ref x1, ref y1);
+            }
+            if (x0 > x1)
+            {
+                Swap(ref x0, ref x1);
+                Swap(ref y0, ref y1);
+            }
+            dx = x1 - x0;
+            dy = y1 - y0;
+            double gradient = (double)dy / dx;
+
+            double xend = Round(x0);
+            double yend = y0 + gradient * (xend - x0);
+            double xgap = RFrac(x0 + 0.5);
+            double xpxl1 = xend;
+            double ypxl1 = Ipart(yend);
+            if (steep)
+            {
+                Plot(graphics, ypxl1, xpxl1, RFrac(yend) * xgap, color);
+                Plot(graphics, ypxl1 + 1, xpxl1, Frac(yend) * xgap, color);
+            }
+            else
+            {
+                Plot(graphics, xpxl1, ypxl1, RFrac(yend) * xgap, color);
+                Plot(graphics, xpxl1, ypxl1 + 1, Frac(yend) * xgap, color);
+            }
+            double intery = yend + gradient;
+
+            xend = Round(x1);
+            yend = y1 + gradient * (xend - x1);
+            xgap = RFrac(x1 + 0.5);
+            double xpxl2 = xend;
+            double ypxl2 = Ipart(yend);
+            if (steep)
+            {
+                Plot(graphics, ypxl2, xpxl2, RFrac(yend) * xgap, color);
+                Plot(graphics, ypxl2 + 1, xpxl2, Frac(yend) * xgap, color);
+            }
+            else
+            {
+                Plot(graphics, xpxl2, ypxl2, RFrac(yend) * xgap, color);
+                Plot(graphics, xpxl2, ypxl2 + 1, Frac(yend) * xgap, color);
+            }
+            if (steep)
+            {
+                for (int x = (int)(xpxl1 + 1); x <= xpxl2 - 1; x++)
+                {
+                    Plot(graphics, Ipart(intery), x, RFrac(intery), color);
+                    Plot(graphics, Ipart(intery) + 1, x, Frac(intery), color);
+                    intery += gradient;
+                }
+            }
+            else
+            {
+                for (int x = (int)(xpxl1 + 1); x <= xpxl2 - 1; x++)
+                {
+                    Plot(graphics, x, Ipart(intery), RFrac(intery), color);
+                    Plot(graphics, x, Ipart(intery) + 1, Frac(intery), color);
+                    intery += gradient;
+                }
+            }
+        }
+
+        private void BresenhamSymmetric(Edge edge, Graphics graphics, Brush brush)
+        {
+            int x0 = edge.From.X;
+            int y0 = edge.From.Y;
+            int x1 = edge.To.X;
+            int y1 = edge.To.Y;
+            int dx = Math.Abs(x1 - x0);
+            int dy = Math.Abs(y1 - y0);
+            int kx = x0 < x1 ? 1 : -1;
+            int ky = y0 < y1 ? 1 : -1;
+            int err = (dx > dy ? dx : (-1) * dy) / 2;
+            int e2;
+            int xf = x0; int yf = y0;
+            int xb = x1; int yb = y1;            while (true)
+            {
+                graphics.FillRectangle(brush, xf, yf, 1, 1);
+                graphics.FillRectangle(brush, xb, yb, 1, 1);
+                e2 = err;
+                if (Math.Abs(xf - xb) <= 1 && Math.Abs(yf - yb) <= 1)
+                    break;
+                if (e2 + dx > 0)
+                {
+                    err -= dy;
+                    xf += kx;
+                    xb -= kx;
+                }
+                if (e2 - dy < 0)
+                {
+                    err += dx;
+                    yf += ky;
+                    yb -= ky;
+                }
+            }
         }
     }
 }
