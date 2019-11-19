@@ -739,15 +739,6 @@ namespace PolygonEditor
                                 BresenhamSymmetric(edge, g, brush);
                                 break;
                         }
-                        //if (clickedEdges.IndexOf(edge) != -1)
-                        //{
-                        //    Bresenham(edge, g, Brushes.Aqua);
-
-                        //}
-                        //else
-                        //{
-                        //    Bresenham(edge, g, Brushes.Black);
-                        //}
                     }
                 }
             }
