@@ -1,6 +1,7 @@
 # PolygonEditor
 PolygonEditor is a program written in WinForms that allows user to create and modify polygons.
 
+![Screenshot1](PolygonEditor.png)
 
 ## Features
 - allows user to create and remove new polygons
